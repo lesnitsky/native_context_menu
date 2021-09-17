@@ -1,6 +1,6 @@
-# context_menu_example
+# native_context_menu_example
 
-Demonstrates how to use the context_menu plugin.
+Demonstrates how to use the native_context_menu plugin.
 
 ## Getting Started
 

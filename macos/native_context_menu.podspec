@@ -1,9 +1,9 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint context_menu.podspec` to validate before publishing.
+# Run `pod lib lint native_context_menu.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'context_menu'
+  s.name             = 'native_context_menu'
   s.version          = '0.0.1'
   s.summary          = 'A new flutter plugin project.'
   s.description      = <<-DESC

@@ -5,8 +5,8 @@
 import FlutterMacOS
 import Foundation
 
-import context_menu
+import native_context_menu
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  ContextMenuPlugin.register(with: registry.registrar(forPlugin: "ContextMenuPlugin"))
+  NativeContextMenuPlugin.register(with: registry.registrar(forPlugin: "NativeContextMenuPlugin"))
 }

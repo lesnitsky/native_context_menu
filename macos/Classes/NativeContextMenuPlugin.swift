@@ -1,18 +1,18 @@
 import Cocoa
 import FlutterMacOS
 
-public class ContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
+public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     var contentView: NSView?
     var result: FlutterResult?
     var responded = false
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
-            name: "context_menu",
+            name: "native_context_menu",
             binaryMessenger: registrar.messenger
         )
         
-        let instance = ContextMenuPlugin()
+        let instance = NativeContextMenuPlugin()
         instance.contentView = NSApplication.shared.windows.first?.contentView
         
         registrar.addMethodCallDelegate(instance, channel: channel)

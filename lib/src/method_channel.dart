@@ -41,7 +41,7 @@ class ShowMenuArgs {
   }
 }
 
-const _channel = MethodChannel('context_menu');
+const _channel = MethodChannel('native_context_menu');
 int _menuItemId = 0;
 
 Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {

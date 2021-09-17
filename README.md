@@ -1,21 +1,21 @@
-# context_menu
+# native_context_menu
 
 Native context menu for flutter apps
 
-[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=context_menu)
-[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/flutter_context_menu.svg?style=social)](https://github.com/lesnitsky/flutter_context_menu)
+[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=native_context_menu)
+[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/native_context_menu.svg?style=social)](https://github.com/lesnitsky/native_context_menu)
 [![Twitter Follow](https://img.shields.io/twitter/follow/lesnitsky_dev.svg?label=Follow%20me&style=social)](https://twitter.com/lesnitsky_dev)
 
 ## Installation
 
 ```bash
-flutter pub add context_menu
+flutter pub add native_context_menu
 ```
 
 ## Usage
 
 ```dart
-import 'package:context_menu/context_menu.dart';
+import 'package:native_context_menu/native_context_menu.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -80,6 +80,6 @@ MIT
 
 ---
 
-[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=context_menu)
-[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/flutter_context_menu.svg?style=social)](https://github.com/lesnitsky/flutter_context_menu)
+[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=native_context_menu)
+[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/native_context_menu.svg?style=social)](https://github.com/lesnitsky/native_context_menu)
 [![Twitter Follow](https://img.shields.io/twitter/follow/lesnitsky_dev.svg?label=Follow%20me&style=social)](https://twitter.com/lesnitsky_dev)

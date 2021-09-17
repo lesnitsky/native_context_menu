@@ -1,8 +1,8 @@
-import 'package:context_menu/context_menu.dart';
+import 'package:native_context_menu/native_context_menu.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(App());
+  runApp(const App());
 }
 
 class App extends StatefulWidget {
