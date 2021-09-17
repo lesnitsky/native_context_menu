@@ -1,24 +1,10 @@
 import Cocoa
 import FlutterMacOS
 
-class EventsStreamHandler: NSObject, FlutterStreamHandler {
-    var plugin: ContextMenuPlugin?
-    
-    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        plugin!.sink = events
-        return nil
-    }
-    
-    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        plugin!.sink = nil
-        return nil
-    }
-    
-}
-
 public class ContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     var contentView: NSView?
-    var sink: FlutterEventSink?
+    var result: FlutterResult?
+    var responded = false
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
@@ -27,55 +13,76 @@ public class ContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         )
         
         let instance = ContextMenuPlugin()
-        registrar.addMethodCallDelegate(instance, channel: channel)
-        
         instance.contentView = NSApplication.shared.windows.first?.contentView
-        let events = FlutterEventChannel(
-            name: "context_menu_events",
-            binaryMessenger: registrar.messenger
-        )
         
-        events.setStreamHandler(EventsStreamHandler())
+        registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
     @objc func onTouched(_ sender: NSMenuItem) {
-        sink!(sender.representedObject)
+        result!((sender.representedObject as! NSDictionary)["id"])
     }
     
     public func menuDidClose(_ menu: NSMenu) {
-        sink!(nil)
+        if let selectedItem = menu.highlightedItem {
+            if !responded {
+                result!((selectedItem.representedObject as! NSDictionary)["id"])
+                responded = true
+            }
+        } else if menu.supermenu == nil && !responded {
+            result!(nil)
+            responded = true
+        }
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "showMenu":
-            let menu = NSMenu()
+            responded = false
             let args = call.arguments as! NSDictionary
             let pos = args["position"] as! [Double]
             let items = args["items"] as! [NSDictionary]
             
-            let menuItems = items.map { (item) -> NSMenuItem in
-                let menuItem = NSMenuItem(
-                    title: item["title"] as! String,
-                    action: #selector(onTouched(_:)), keyEquivalent: "")
-                
-                menuItem.isEnabled = true
-                menuItem.representedObject = item["id"] as! Int
-                
-                return menuItem
-            }
+            let menu = createMenu(items)
             
-            menu.delegate = self
+            self.result = result
             
             menu.popUp(
-                positioning: menuItems[0],
+                positioning: nil,
                 at: NSPoint(x: pos[0], y: pos[1]),
                 in: contentView
             )
-
-            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+    
+    func createMenu(_ items: [NSDictionary]) -> NSMenu {
+        let menuItems = items.map { (item) -> NSMenuItem in
+            let menuItem = NSMenuItem(
+                title: item["title"] as! String,
+                action: #selector(onTouched(_:)), keyEquivalent: "")
+
+            menuItem.representedObject = item
+            
+            return menuItem
+        }
+        
+        let menu = NSMenu()
+
+        menu.autoenablesItems = false
+        menu.delegate = self
+        
+        menuItems.forEach { (item) -> Void in
+            menu.addItem(item)
+            
+            let children = (item.representedObject as! NSDictionary)["items"] as! [NSDictionary]
+            
+            if !children.isEmpty {
+                let submenu = createMenu(children)
+                menu.setSubmenu(submenu, for: item)
+            }
+        }
+        
+        return menu
     }
 }
