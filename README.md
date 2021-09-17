@@ -6,6 +6,8 @@ Native context menu for flutter apps
 [![GitHub stars](https://img.shields.io/github/stars/lesnitsky/native_context_menu.svg?style=social)](https://github.com/lesnitsky/native_context_menu)
 [![Twitter Follow](https://img.shields.io/twitter/follow/lesnitsky_dev.svg?label=Follow%20me&style=social)](https://twitter.com/lesnitsky_dev)
 
+![Preview](https://lesnitsky-images.s3.eu-north-1.amazonaws.com/native_context_menu.gif)
+
 ## Installation
 
 ```bash
