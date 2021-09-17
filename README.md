@@ -1,18 +1,85 @@
 # context_menu
 
-A new flutter plugin project.
+Native context menu for flutter apps
 
-## Getting Started
+[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=context_menu)
+[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/flutter_context_menu.svg?style=social)](https://github.com/lesnitsky/flutter_context_menu)
+[![Twitter Follow](https://img.shields.io/twitter/follow/lesnitsky_dev.svg?label=Follow%20me&style=social)](https://twitter.com/lesnitsky_dev)
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+## Installation
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub add context_menu
+```
 
-The plugin project was generated without specifying the `--platforms` flag, no platforms are currently supported.
-To add platforms, run `flutter create -t plugin --platforms <platforms> .` under the same
-directory. You can also find a detailed instruction on how to add platforms in the `pubspec.yaml` at https://flutter.dev/docs/development/packages-and-plugins/developing-packages#plugin-platforms.
+## Usage
+
+```dart
+import 'package:context_menu/context_menu.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(App());
+}
+
+class App extends StatefulWidget {
+  const App({Key? key}) : super(key: key);
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  String? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ContextMenuRegion(
+          onDismissed: () => setState(() => action = 'Menu was dismissed'),
+          onItemSelected: (item) => setState(() {
+            action = '${item.title} was selected';
+          }),
+          menuItems: [
+            MenuItem(title: 'First item'),
+            MenuItem(title: 'Second item'),
+            MenuItem(
+              title: 'Third item with submenu',
+              items: [
+                MenuItem(title: 'First subitem'),
+                MenuItem(title: 'Second subitem'),
+                MenuItem(title: 'Third subitem'),
+              ],
+            ),
+            MenuItem(title: 'Fourth item'),
+          ],
+          child: Card(
+            child: Center(
+              child: Text(action ?? 'Right click me'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Platform support
+
+| Platform | Supported |
+| -------- | --------- |
+| MacOS    | ✅        |
+| Linux    | ❌        |
+| Windows  | ❌        |
+
+## License
+
+MIT
+
+---
+
+[![lesnitsky.dev](https://lesnitsky.dev/shield.svg?hash=69464)](https://lesnitsky.dev?utm_source=context_menu)
+[![GitHub stars](https://img.shields.io/github/stars/lesnitsky/flutter_context_menu.svg?style=social)](https://github.com/lesnitsky/flutter_context_menu)
+[![Twitter Follow](https://img.shields.io/twitter/follow/lesnitsky_dev.svg?label=Follow%20me&style=social)](https://twitter.com/lesnitsky_dev)
