@@ -1,6 +1,6 @@
 name: native_context_menu
 description: Native context menu for flutter apps
-version: 0.1.0
+version: 0.1.0+1
 homepage:
 
 environment:
