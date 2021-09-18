@@ -29,7 +29,7 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
                 responded = true
             }
         } else if menu.supermenu == nil && !responded {
-            result!(nil)
+            result!(-1)
             responded = true
         }
     }

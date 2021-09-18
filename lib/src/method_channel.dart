@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/services.dart' show MethodChannel, EventChannel;
 import 'package:flutter/widgets.dart' show Offset, VoidCallback;
 
@@ -35,6 +37,7 @@ class ShowMenuArgs {
 
   Map<String, dynamic> toJson() {
     return {
+      'devicePixelRatio': window.devicePixelRatio,
       'position': [position.dx, position.dy],
       'items': items.map((e) => e.toJson()).toList(),
     };
@@ -50,7 +53,7 @@ Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
 
   final id = await _channel.invokeMethod('showMenu', args.toJson());
 
-  if (id != null) {
+  if (id != -1) {
     return menu[id];
   }
 }
