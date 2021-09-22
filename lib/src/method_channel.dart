@@ -28,13 +28,15 @@ class MenuItem {
 }
 
 class ShowMenuArgs {
+  final double devicePixelRatio;
   final Offset position;
   final List<MenuItem> items;
 
-  ShowMenuArgs(this.position, this.items);
+  ShowMenuArgs(this.devicePixelRatio, this.position, this.items);
 
   Map<String, dynamic> toJson() {
     return {
+      'devicePixelRatio': devicePixelRatio,
       'position': [position.dx, position.dy],
       'items': items.map((e) => e.toJson()).toList(),
     };
@@ -50,7 +52,7 @@ Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
 
   final id = await _channel.invokeMethod('showMenu', args.toJson());
 
-  if (id != null) {
+  if (id != -1) {
     return menu[id];
   }
 }

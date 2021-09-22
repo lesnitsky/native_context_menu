@@ -38,14 +38,14 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
 
         shouldReact = false;
 
-        final height = MediaQuery.of(context).size.height;
         final position = Offset(
           e.position.dx + widget.menuOffset.dx,
-          height - e.position.dy + widget.menuOffset.dy,
+          e.position.dy + widget.menuOffset.dy,
         );
 
         final selectedItem = await showContextMenu(
           ShowMenuArgs(
+            MediaQuery.of(context).devicePixelRatio,
             position,
             widget.menuItems,
           ),
