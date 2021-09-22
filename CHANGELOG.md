@@ -1,3 +1,7 @@
-## 0.0.1
+## 0.1.1+2
 
-* TODO: Describe initial release.
+- windows implementation
+
+## 0.1.0
+
+- macOS implementation

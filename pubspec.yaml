@@ -1,7 +1,8 @@
 name: native_context_menu
 description: Native context menu for flutter apps
-version: 0.1.0+1
-homepage:
+version: 0.1.1+2
+homepage: https://github.com/lesnitsky/native_context_menu
+repository: https://github.com/lesnitsky/native_context_menu
 
 environment:
   sdk: ">=2.12.0 <3.0.0"

@@ -74,7 +74,7 @@ class _AppState extends State<App> {
 | -------- | --------- |
 | MacOS    | ✅        |
 | Linux    | ❌        |
-| Windows  | ❌        |
+| Windows  | ✅        |
 
 ## License
 
