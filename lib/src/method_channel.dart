@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/services.dart' show MethodChannel, EventChannel;
 import 'package:flutter/widgets.dart' show Offset, VoidCallback;
 
@@ -30,14 +28,15 @@ class MenuItem {
 }
 
 class ShowMenuArgs {
+  final double devicePixelRatio;
   final Offset position;
   final List<MenuItem> items;
 
-  ShowMenuArgs(this.position, this.items);
+  ShowMenuArgs(this.devicePixelRatio, this.position, this.items);
 
   Map<String, dynamic> toJson() {
     return {
-      'devicePixelRatio': window.devicePixelRatio,
+      'devicePixelRatio': devicePixelRatio,
       'position': [position.dx, position.dy],
       'items': items.map((e) => e.toJson()).toList(),
     };

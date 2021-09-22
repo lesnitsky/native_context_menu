@@ -45,6 +45,7 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
 
         final selectedItem = await showContextMenu(
           ShowMenuArgs(
+            MediaQuery.of(context).devicePixelRatio,
             position,
             widget.menuItems,
           ),
