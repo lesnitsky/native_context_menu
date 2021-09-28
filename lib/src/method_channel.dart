@@ -46,34 +46,30 @@ class ShowMenuArgs {
   }
 }
 
-var _completer = Completer<int>();
 final _channel = const MethodChannel('native_context_menu')
   ..setMethodCallHandler(
-    Platform.isLinux
-        ? (call) async {
-            switch (call.method) {
-              case 'id':
-                {
-                  _completer.complete(call.arguments);
-                  break;
-                }
-              default:
-                break;
-            }
+    (call) async {
+      switch (call.method) {
+        case 'id':
+          {
+            // Notify about the selected menu item's id & complete the future.
+            _completer.complete(call.arguments);
+            break;
           }
-        : (_) async {},
+        default:
+          break;
+      }
+    },
   );
+Completer<int> _completer = Completer<int>();
 int _menuItemId = 0;
 
 Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
   final menu = _buildMenu(args.items);
   _menuItemId = 0;
-
-  var id = await _channel.invokeMethod('showMenu', args.toJson());
-  if (Platform.isLinux) {
-    id = await _completer.future;
-    _completer = Completer<int>();
-  }
+  _channel.invokeMethod('showMenu', args.toJson());
+  int id = await _completer.future;
+  _completer = Completer<int>();
   if (id != -1) {
     return menu[id];
   }
@@ -81,11 +77,9 @@ Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
 
 Map<int, MenuItem> _buildMenu(List<MenuItem> items) {
   final built = <int, MenuItem>{};
-
   for (var item in items) {
     item._id = _menuItemId++;
     built[item._id] = item;
-
     if (item.hasSubitems) {
       final submenu = _buildMenu(item.items);
       built.addAll(submenu);
