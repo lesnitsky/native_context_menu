@@ -46,9 +46,15 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             
             self.result = result
             
+            var y = pos[1]
+            
+            if !contentView!.isFlipped {
+                y = Double(contentView!.frame.height) - y
+            }
+
             menu.popUp(
                 positioning: nil,
-                at: NSPoint(x: pos[0], y: pos[1]),
+                at: NSPoint(x: pos[0], y: y),
                 in: contentView
             )
         default:
