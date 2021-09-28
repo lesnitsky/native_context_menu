@@ -1,3 +1,7 @@
+## 0.1.2+1
+
+- fix for macOS flipped content views
+
 ## 0.1.2
 
 - fix native context menu positioning regression
