@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/services.dart' show MethodChannel, EventChannel;
 import 'package:flutter/widgets.dart' show Offset, VoidCallback;
 
@@ -43,15 +46,34 @@ class ShowMenuArgs {
   }
 }
 
-const _channel = MethodChannel('native_context_menu');
+var _completer = Completer<int>();
+final _channel = const MethodChannel('native_context_menu')
+  ..setMethodCallHandler(
+    Platform.isLinux
+        ? (call) async {
+            switch (call.method) {
+              case 'id':
+                {
+                  _completer.complete(call.arguments);
+                  break;
+                }
+              default:
+                break;
+            }
+          }
+        : (_) async {},
+  );
 int _menuItemId = 0;
 
 Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
   final menu = _buildMenu(args.items);
   _menuItemId = 0;
 
-  final id = await _channel.invokeMethod('showMenu', args.toJson());
-
+  var id = await _channel.invokeMethod('showMenu', args.toJson());
+  if (Platform.isLinux) {
+    id = await _completer.future;
+    _completer = Completer<int>();
+  }
   if (id != -1) {
     return menu[id];
   }
@@ -60,7 +82,7 @@ Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
 Map<int, MenuItem> _buildMenu(List<MenuItem> items) {
   final built = <int, MenuItem>{};
 
-  items.forEach((item) {
+  for (var item in items) {
     item._id = _menuItemId++;
     built[item._id] = item;
 
@@ -68,7 +90,7 @@ Map<int, MenuItem> _buildMenu(List<MenuItem> items) {
       final submenu = _buildMenu(item.items);
       built.addAll(submenu);
     }
-  });
+  }
 
   return built;
 }
