@@ -1,6 +1,8 @@
 #include "include/native_context_menu/native_context_menu_plugin.h"
 
+#include <Windows.h>
 #include <WinUser.h>
+
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
