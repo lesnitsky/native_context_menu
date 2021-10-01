@@ -1,8 +1,22 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/services.dart' show MethodChannel, EventChannel;
 import 'package:flutter/widgets.dart' show Offset, VoidCallback;
+
+/// Method channel name of the plugin.
+const String _kChannelName = 'native_context_menu';
+
+/// Show menu call.
+/// Shows context menu at passed position or cursor position.
+/// Pass `devicePixelRatio` and `position` from Dart to show menu at specified position.
+/// If it is not defined, native code will show the context menu at the cursor's position.
+const String _kShowMenu = "showMenu";
+
+/// Called when an item is selected from the context menu.
+const String _kOnItemSelected = "onItemSelected";
+
+/// Called when menu is dismissed without clicking any item.
+const String _kOnMenuDismissed = "onMenuDismissed";
 
 class MenuItem {
   MenuItem({
@@ -44,43 +58,55 @@ class ShowMenuArgs {
   Map<String, dynamic> toJson() {
     return {
       'devicePixelRatio': devicePixelRatio,
-      'position': [position.dx, position.dy],
+      'position': <double>[position.dx, position.dy],
       'items': items.map((e) => e.toJson()).toList(),
     };
   }
 }
 
-final _channel = const MethodChannel('native_context_menu')
+final _channel = const MethodChannel(_kChannelName)
   ..setMethodCallHandler(
     (call) async {
       switch (call.method) {
-        case 'id':
+        case _kOnItemSelected:
           {
-            // Notify about the selected menu item's id & complete the future.
-            _completer.complete(call.arguments);
+            _contextMenuCompleter.complete(call.arguments);
+            break;
+          }
+        case _kOnMenuDismissed:
+          {
+            _contextMenuCompleter.complete(null);
             break;
           }
         default:
-          break;
+          {
+            _contextMenuCompleter.completeError(
+              Exception('$_kChannelName: Invalid method call received.'),
+            );
+          }
       }
     },
   );
-Completer<int> _completer = Completer<int>();
+
+Completer<int?> _contextMenuCompleter = Completer<int?>();
+
 int _menuItemId = 0;
 
 Future<MenuItem?> showContextMenu(ShowMenuArgs args) async {
   final menu = _buildMenu(args.items);
   _menuItemId = 0;
-  _channel.invokeMethod('showMenu', args.toJson());
-  int id = await _completer.future;
-  _completer = Completer<int>();
-  if (id != -1) {
-    return menu[id];
-  }
+
+  _channel.invokeMethod(_kShowMenu, args.toJson());
+
+  final id = await _contextMenuCompleter.future;
+  _contextMenuCompleter = Completer<int?>();
+
+  return menu[id];
 }
 
 Map<int, MenuItem> _buildMenu(List<MenuItem> items) {
   final built = <int, MenuItem>{};
+
   for (var item in items) {
     item._id = _menuItemId++;
     built[item._id] = item;

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -15,9 +16,18 @@
                               NativeContextMenuPlugin))
 
 // Platform channel name.
-constexpr auto kChannelName = "native_context_menu";
+constexpr static auto kChannelName = "native_context_menu";
 // Show menu call.
-constexpr auto kShowMenu = "showMenu";
+// Shows context menu at passed position or cursor position.
+// Pass `devicePixelRatio` and `position` from Dart to show menu at specified
+// coordinates. If it is not defined, WIN32 will use `GetCursorPos` to show the
+// context menu at the cursor's position.
+constexpr static auto kShowMenu = "showMenu";
+
+// Called when an item is selected from the context menu.
+constexpr static auto kOnItemSelected = "onItemSelected";
+// Called when menu is dismissed without clicking any item.
+constexpr static auto kOnMenuDismissed = "onMenuDismissed";
 
 NativeContextMenuPlugin* g_plugin;
 
@@ -64,7 +74,7 @@ static inline void on_menu_item_clicked(GtkWidget* widget, gpointer data) {
   // Pressed menu item.
   g_plugin->last_menu_item_selected = true;
   auto menu_item = static_cast<MenuItem*>(data);
-  fl_method_channel_invoke_method(g_plugin->channel, "id",
+  fl_method_channel_invoke_method(g_plugin->channel, kOnItemSelected,
                                   fl_value_new_int(menu_item->id()), nullptr,
                                   nullptr, nullptr);
 }
@@ -81,8 +91,8 @@ static inline void on_menu_deactivated(GtkWidget* widget, gpointer) {
   g_plugin->last_menu_thread.reset(new std::thread([=]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (!g_plugin->last_menu_item_selected)
-      fl_method_channel_invoke_method(g_plugin->channel, "id",
-                                      fl_value_new_int(-1), nullptr, nullptr,
+      fl_method_channel_invoke_method(g_plugin->channel, kOnMenuDismissed,
+                                      fl_value_new_null(), nullptr, nullptr,
                                       nullptr);
   }));
 }
@@ -109,6 +119,9 @@ static void native_context_menu_plugin_handle_method_call(
     }
     auto arguments = fl_method_call_get_args(method_call);
     auto items = fl_value_lookup_string(arguments, "items");
+    auto device_pixel_ratio =
+        fl_value_lookup_string(arguments, "devicePixelRatio");
+    auto position = fl_value_lookup_string(arguments, "position");
     GdkWindow* window = get_window(self);
     GtkWidget* menu = gtk_menu_new();
     for (int32_t i = 0; i < fl_value_get_length(items); i++) {
@@ -149,34 +162,30 @@ static void native_context_menu_plugin_handle_method_call(
       gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
     }
     GdkRectangle rectangle;
-    // Define USE_FLUTTER_POSITION to use `devicePixelRatio` and `position` from
-    // Dart. If it is not defined, GTK will calculate the mouse position & show
-    // the context menu accordingly.
-    // It is recommended to not use it since it can cause problem on Wayland.
-#ifdef USE_FLUTTER_POSITION
-    auto device_pixel_ratio =
-        fl_value_lookup_string(arguments, "devicePixelRatio");
-    auto position = fl_value_lookup_string(arguments, "position");
-    rectangle.x = fl_value_get_float(fl_value_get_list_value(position, 0)) *
-                  fl_value_get_float(device_pixel_ratio);
-    rectangle.y = fl_value_get_float(fl_value_get_list_value(position, 1)) *
-                  fl_value_get_float(device_pixel_ratio);
-#else
-    GdkDevice* mouse_device;
-    int x, y;
-    // Legacy support.
+    // Pass `devicePixelRatio` and `position` from Dart to show menu at
+    // specified coordinates. If it is not defined, WIN32 will use
+    // `GetCursorPos` to show the context menu at the cursor's position.
+    if (device_pixel_ratio != nullptr && position != nullptr) {
+      rectangle.x = fl_value_get_float(fl_value_get_list_value(position, 0)) *
+                    fl_value_get_float(device_pixel_ratio);
+      rectangle.y = fl_value_get_float(fl_value_get_list_value(position, 1)) *
+                    fl_value_get_float(device_pixel_ratio);
+    } else {
+      GdkDevice* mouse_device;
+      int x, y;
+      // Legacy support.
 #if GTK_CHECK_VERSION(3, 20, 0)
-    GdkSeat* seat = gdk_display_get_default_seat(gdk_display_get_default());
-    mouse_device = gdk_seat_get_pointer(seat);
+      GdkSeat* seat = gdk_display_get_default_seat(gdk_display_get_default());
+      mouse_device = gdk_seat_get_pointer(seat);
 #else
-    GdkDeviceManager* devman =
-        gdk_display_get_device_manager(gdk_display_get_default());
-    mouse_device = gdk_device_manager_get_client_pointer(devman);
+      GdkDeviceManager* devman =
+          gdk_display_get_device_manager(gdk_display_get_default());
+      mouse_device = gdk_device_manager_get_client_pointer(devman);
 #endif
-    gdk_window_get_device_position(window, mouse_device, &x, &y, NULL);
-    rectangle.x = x;
-    rectangle.y = y;
-#endif
+      gdk_window_get_device_position(window, mouse_device, &x, &y, NULL);
+      rectangle.x = x;
+      rectangle.y = y;
+    }
     g_signal_connect(G_OBJECT(menu), "deactivate",
                      G_CALLBACK(on_menu_deactivated), nullptr);
     // `gtk_menu_popup_at_rect` is used since `gtk_menu_popup_at_pointer` will
