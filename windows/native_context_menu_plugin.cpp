@@ -1,5 +1,6 @@
 #include "include/native_context_menu/native_context_menu_plugin.h"
 
+#include <WinUser.h>
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
@@ -9,15 +10,21 @@
 #include <map>
 #include <memory>
 
-#include <WinUser.h>
-
 // Platform channel name.
-constexpr auto kChannelName = "native_context_menu";
+constexpr static auto kChannelName = "native_context_menu";
 // Show menu call.
-constexpr auto kShowMenu = "showMenu";
+// Shows context menu at passed position or cursor position.
+// Pass `devicePixelRatio` and `position` from Dart to show menu at specified
+// coordinates. If it is not defined, WIN32 will use `GetCursorPos` to show the
+// context menu at the cursor's position.
+constexpr static auto kShowMenu = "showMenu";
+
+// Called when an item is selected from the context menu.
+constexpr static auto kOnItemSelected = "onItemSelected";
+// Called when menu is dismissed without clicking any item.
+constexpr static auto kOnMenuDismissed = "onMenuDismissed";
 
 namespace {
-
 class NativeContextMenuPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
@@ -35,11 +42,13 @@ class NativeContextMenuPlugin : public flutter::Plugin {
   HMENU menu_handle_ = nullptr;
   int32_t window_proc_id_ = -1;
   // Windows sends `WM_EXITMENULOOP` message even if a menu item is selected
-  // before `WM_COMMAND`. For responding Dart the `id` of the selected menu item
+  // before `WM_COMMAND`. For responding Dart the `id` of the selected menu
+  // item
   // before the -1, this thread adds slight delay to `WM_EXITMENULOOP`. Freed
   // after each subsequent call.
   std::unique_ptr<std::thread> last_menu_thread_ = nullptr;
   bool last_menu_item_selected_ = false;
+  bool is_menu_created_ = false;
   // For safe conversion between `wchar_t[]` and `char[]`.
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter_;
 
@@ -91,18 +100,25 @@ std::optional<LRESULT> NativeContextMenuPlugin::HandleWindowProc(
   switch (message) {
     case WM_COMMAND: {
       last_menu_item_selected_ = true;
-      channel_->InvokeMethod("id", std::make_unique<flutter::EncodableValue>(
-                                       static_cast<int32_t>(wparam)));
+      is_menu_created_ = false;
+      channel_->InvokeMethod(kOnItemSelected,
+                             std::make_unique<flutter::EncodableValue>(
+                                 static_cast<int32_t>(wparam)));
       break;
     }
     case WM_EXITMENULOOP: {
-      last_menu_thread_ = std::make_unique<std::thread>([=] {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if (!last_menu_item_selected_) {
-          channel_->InvokeMethod("id",
-                                 std::make_unique<flutter::EncodableValue>(-1));
-        }
-      });
+      if (is_menu_created_) {
+        last_menu_thread_ = std::make_unique<std::thread>([=] {
+          // Prevent WM_EXITMENULOOP being sent first in-case item was selected.
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+          if (!last_menu_item_selected_) {
+            channel_->InvokeMethod(kOnMenuDismissed,
+                                   std::make_unique<flutter::EncodableValue>(
+                                       flutter::EncodableValue(nullptr)));
+            is_menu_created_ = false;
+          }
+        });
+      }
       break;
     }
     default:
@@ -147,42 +163,52 @@ void NativeContextMenuPlugin::HandleMethodCall(
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare(kShowMenu) == 0) {
     last_menu_item_selected_ = false;
+    is_menu_created_ = true;
     if (last_menu_thread_ != nullptr) {
       last_menu_thread_->detach();
       last_menu_thread_.reset(nullptr);
     }
     auto arguments = std::get<flutter::EncodableMap>(*method_call.arguments());
+    std::optional<double> device_pixel_patio;
+    std::optional<flutter::EncodableList> position;
+    if (arguments.find(flutter::EncodableValue("devicePixelRatio")) !=
+        arguments.end()) {
+      device_pixel_patio = std::get<double>(
+          arguments[flutter::EncodableValue("devicePixelRatio")]);
+    }
+    if (arguments.find(flutter::EncodableValue("position")) !=
+        arguments.end()) {
+      position = std::get<flutter::EncodableList>(
+          arguments[flutter::EncodableValue("position")]);
+    }
     menu_handle_ = CreatePopupMenu();
     CreateMenu(menu_handle_, arguments);
     HWND window = GetWindow();
-    RECT rect;
-    ::GetWindowRect(window, &rect);
-// Define USE_FLUTTER_POSITION to use `devicePixelRatio` and `position` from
-// Dart. If it is not defined, WIN32 will use `GetCursorPos` to show the context
-// menu at the mouse's position.
-#ifdef USE_FLUTTER_POSITION
-    auto device_pixel_patio = std::get<double>(
-        arguments[flutter::EncodableValue("devicePixelRatio")]);
-    auto position = std::get<flutter::EncodableList>(
-        arguments[flutter::EncodableValue("position")]);
-    TITLEBARINFOEX title_bar_info;
-    title_bar_info.cbSize = sizeof(TITLEBARINFOEX);
-    ::SendMessage(window, WM_GETTITLEBARINFOEX, 0, (LPARAM)&title_bar_info);
-    int32_t title_bar_height =
-        title_bar_info.rcTitleBar.bottom - title_bar_info.rcTitleBar.top;
-    int32_t x = static_cast<int32_t>(
-        (std::get<double>(position[0]) * device_pixel_patio) + rect.left);
-    int32_t y = static_cast<int32_t>(
-        (std::get<double>(position[1]) * device_pixel_patio) + rect.top +
-        title_bar_height);
-    ::TrackPopupMenu(menu_handle_, TPM_LEFTALIGN | TPM_LEFTBUTTON, x, y, 0,
-                     window, NULL);
-#else
-    POINT point;
-    ::GetCursorPos(&point);
-    ::TrackPopupMenu(menu_handle_, TPM_LEFTALIGN | TPM_LEFTBUTTON, point.x,
-                     point.y, 0, window, NULL);
-#endif
+    // Pass `devicePixelRatio` and `position` from Dart to show menu at
+    // specified coordinates. If it is not defined, WIN32 will use
+    // `GetCursorPos` to show the context menu at the cursor's position.
+    if (device_pixel_patio && position) {
+      RECT rect;
+      ::GetWindowRect(window, &rect);
+      TITLEBARINFOEX title_bar_info;
+      title_bar_info.cbSize = sizeof(TITLEBARINFOEX);
+      ::SendMessage(window, WM_GETTITLEBARINFOEX, 0, (LPARAM)&title_bar_info);
+      int32_t title_bar_height =
+          title_bar_info.rcTitleBar.bottom - title_bar_info.rcTitleBar.top;
+      int32_t x = static_cast<int32_t>(
+          (std::get<double>(position.value()[0]) * device_pixel_patio.value()) +
+          rect.left);
+      int32_t y = static_cast<int32_t>(
+          (std::get<double>(position.value()[1]) * device_pixel_patio.value()) +
+          rect.top + title_bar_height);
+      ::TrackPopupMenu(menu_handle_, TPM_LEFTALIGN | TPM_LEFTBUTTON, x, y, 0,
+                       window, NULL);
+    } else {
+      POINT point;
+      ::GetCursorPos(&point);
+      ::TrackPopupMenu(menu_handle_, TPM_LEFTALIGN | TPM_LEFTBUTTON, point.x,
+                       point.y, 0, window, NULL);
+    }
     result->Success(nullptr);
   } else {
     result->NotImplemented();
