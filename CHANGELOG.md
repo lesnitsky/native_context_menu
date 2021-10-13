@@ -1,3 +1,7 @@
+## 0.1.2+2
+
+- longer pub description
+
 ## 0.1.2+1
 
 - fix for macOS flipped content views
