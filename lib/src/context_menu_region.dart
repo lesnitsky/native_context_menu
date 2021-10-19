@@ -4,12 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'method_channel.dart';
 
 class ContextMenuRegion extends StatefulWidget {
-  final Widget child;
-  final List<MenuItem> menuItems;
-  final Offset menuOffset;
-  final void Function(MenuItem item)? onItemSelected;
-  final VoidCallback? onDismissed;
-
   const ContextMenuRegion({
     required this.child,
     required this.menuItems,
@@ -18,6 +12,12 @@ class ContextMenuRegion extends StatefulWidget {
     this.onDismissed,
     this.menuOffset = Offset.zero,
   }) : super(key: key);
+
+  final Widget child;
+  final List<MenuItem> menuItems;
+  final Offset menuOffset;
+  final void Function(MenuItem item)? onItemSelected;
+  final VoidCallback? onDismissed;
 
   @override
   _ContextMenuRegionState createState() => _ContextMenuRegionState();
