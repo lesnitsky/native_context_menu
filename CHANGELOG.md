@@ -1,3 +1,7 @@
+## 0.2.0+3
+
+- add support for linux
+
 ## 0.1.2+2
 
 - longer pub description
