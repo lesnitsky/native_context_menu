@@ -3,8 +3,8 @@ import FlutterMacOS
 
 public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     var contentView: NSView?
-    var result: FlutterResult?
     var responded = false
+    var channel: FlutterMethodChannel?;
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
@@ -14,22 +14,34 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         
         let instance = NativeContextMenuPlugin()
         instance.contentView = NSApplication.shared.windows.first?.contentView
+        instance.channel = channel;
         
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
-    @objc func onTouched(_ sender: NSMenuItem) {
-        result!((sender.representedObject as! NSDictionary)["id"])
+    func getMenuItemId(_ menuItem: NSMenuItem) -> Int {
+        let menuItemData = (menuItem.representedObject as! NSDictionary)
+        let id = menuItemData["id"] as! Int;
+        return id;
+    }
+    
+    @objc func onItemSelected(_ sender: NSMenuItem) {
+        let id = getMenuItemId(sender)
+        channel?.invokeMethod("onItemSelected", arguments: id, result: nil)
+    }
+    
+    func onItemDismissed() {
+        channel?.invokeMethod("onMenuDismissed", arguments: nil, result: nil)
     }
     
     public func menuDidClose(_ menu: NSMenu) {
         if let selectedItem = menu.highlightedItem {
             if !responded {
-                result!((selectedItem.representedObject as! NSDictionary)["id"])
+                onItemSelected(selectedItem)
                 responded = true
             }
         } else if menu.supermenu == nil && !responded {
-            result!(-1)
+            onItemDismissed()
             responded = true
         }
     }
@@ -44,17 +56,16 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             
             let menu = createMenu(items)
             
-            self.result = result
-            
+            let x = pos[0]
             var y = pos[1]
-            
             if !contentView!.isFlipped {
-                y = Double(contentView!.frame.height) - y
+                let frameHeight = Double(contentView!.frame.height)
+                y = frameHeight - y
             }
 
             menu.popUp(
                 positioning: nil,
-                at: NSPoint(x: pos[0], y: y),
+                at: NSPoint(x: x, y: y),
                 in: contentView
             )
         default:
@@ -66,7 +77,7 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         let menuItems = items.map { (item) -> NSMenuItem in
             let menuItem = NSMenuItem(
                 title: item["title"] as! String,
-                action: #selector(onTouched(_:)), keyEquivalent: "")
+                action: #selector(onItemSelected(_:)), keyEquivalent: "")
 
             menuItem.representedObject = item
             

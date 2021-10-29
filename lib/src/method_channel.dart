@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart' show MethodChannel, EventChannel;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter/widgets.dart' show Offset, VoidCallback;
 
 /// Method channel name of the plugin.

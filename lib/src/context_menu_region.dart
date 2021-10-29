@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
@@ -30,8 +28,6 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-
     return Listener(
       onPointerDown: (e) {
         shouldReact = e.kind == PointerDeviceKind.mouse &&
@@ -42,15 +38,9 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
 
         shouldReact = false;
 
-        double y = e.position.dy;
-
-        if (Platform.isMacOS) {
-          y = mq.size.height - y;
-        }
-
         final position = Offset(
           e.position.dx + widget.menuOffset.dx,
-          y + widget.menuOffset.dy,
+          e.position.dy + widget.menuOffset.dy,
         );
 
         final selectedItem = await showContextMenu(
