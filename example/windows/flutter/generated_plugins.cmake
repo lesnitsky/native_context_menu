@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   native_context_menu
+  window_manager
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

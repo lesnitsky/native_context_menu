@@ -195,8 +195,10 @@ void NativeContextMenuPlugin::HandleMethodCall(
       TITLEBARINFOEX title_bar_info;
       title_bar_info.cbSize = sizeof(TITLEBARINFOEX);
       ::SendMessage(window, WM_GETTITLEBARINFOEX, 0, (LPARAM)&title_bar_info);
-      int32_t title_bar_height =
-          title_bar_info.rcTitleBar.bottom - title_bar_info.rcTitleBar.top;
+      int32_t title_bar_height = title_bar_info.rcTitleBar.bottom == 0
+                                     ? 0
+                                     : title_bar_info.rcTitleBar.bottom -
+                                           title_bar_info.rcTitleBar.top;
       int32_t x = static_cast<int32_t>(
           (std::get<double>(position.value()[0]) * device_pixel_patio.value()) +
           rect.left);
