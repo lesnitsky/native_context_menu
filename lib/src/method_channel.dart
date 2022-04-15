@@ -31,6 +31,13 @@ class MenuItem {
   final List<MenuItem> items;
   final Object? action;
 
+  /// Allows a callback to be registered on an item-by-item basis (as opposed to the single
+  /// `ContextMenuRegion.onItemSelected` callback that is registered at the higher level.
+  /// If this value is not set, the menu item will be disabled. This is the case even for
+  /// nested menu items - if you want to disable a whole menu tree, you would set `onSelected`
+  /// for the root menu item to `null`. If you want to enable the menu tree, `onSelected`
+  /// must be non-`null` - an empty function works just fine. eg. `() {}`.  This function
+  /// will be called back if the user explicitly clicks on the root item of the sub-menu.
   final VoidCallback? onSelected;
 
   bool get hasSubitems => items.isNotEmpty;
