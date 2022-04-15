@@ -40,6 +40,7 @@ class MenuItem {
       'id': _id,
       'title': title,
       'items': items.map((e) => e.toJson()).toList(),
+      'enabled': onSelected != null,
     };
   }
 }
