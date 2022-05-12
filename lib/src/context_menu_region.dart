@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart' hide MenuItem;
 
 import 'method_channel.dart';
 
