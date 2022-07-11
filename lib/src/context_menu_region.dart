@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart' hide MenuItem;
 
 import 'method_channel.dart';
 
@@ -52,6 +52,7 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
         );
 
         if (selectedItem != null) {
+          selectedItem.onSelected?.call();
           widget.onItemSelected?.call(selectedItem);
         } else {
           widget.onDismissed?.call();

@@ -80,6 +80,7 @@ public class NativeContextMenuPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
                 action: #selector(onItemSelected(_:)), keyEquivalent: "")
 
             menuItem.representedObject = item
+            menuItem.isEnabled = item["enabled"] as! Bool
             
             return menuItem
         }
