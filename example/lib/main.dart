@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide MenuItem;
 import 'package:native_context_menu/native_context_menu.dart';
 import 'package:window_manager/window_manager.dart';
 
