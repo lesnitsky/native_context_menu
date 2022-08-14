@@ -52,6 +52,7 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
         );
 
         if (selectedItem != null) {
+          selectedItem.onSelected?.call();
           widget.onItemSelected?.call(selectedItem);
         } else {
           widget.onDismissed?.call();
