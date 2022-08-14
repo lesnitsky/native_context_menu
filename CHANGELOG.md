@@ -1,3 +1,7 @@
+## 0.2.2+5
+
+- compatibility with Flutter 3
+
 ## 0.2.0+3
 
 - add support for linux
