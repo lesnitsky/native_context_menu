@@ -16,7 +16,7 @@ class ContextMenuRegion extends StatefulWidget {
   final Widget child;
   final List<MenuItem> menuItems;
   final Offset menuOffset;
-  final void Function(MenuItem item)? onItemSelected;
+  final void Function(MenuItem item, Offset pos)? onItemSelected;
   final VoidCallback? onDismissed;
 
   @override
@@ -52,7 +52,7 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
         );
 
         if (selectedItem != null) {
-          widget.onItemSelected?.call(selectedItem);
+          widget.onItemSelected?.call(selectedItem, e.localPosition);
         } else {
           widget.onDismissed?.call();
         }
